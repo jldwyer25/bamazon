@@ -9,101 +9,141 @@ var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "jimmydwyer",
-    password:"",
+    password:"Sn00ganss!23",
     database: "bamazonDB"
 });
 
-// connect to the mysql server and sql database
-connection.connect(function(err) {
-    if (err) throw err;
-    // run the start function after the connection is made to prompt the user
-    console.log("Welcome to Bamazon");
-    start();
-  });
-
-
-//   function start() {
-//     inquirer
-//       .prompt({
-//         name: "shop",
-//         type: "rawlist",
-//         message: "What item would you like to buy?",
-//         choices: ["POST", "BID"]
-//       })
-//       .then(function(answer) {
-//         // based on their answer, either call the bid or the post functions
-//         if (answer.postOrBid.toUpperCase() === "POST") {
-//           postAuction();
-//         }
-//         else {
-//           bidAuction();
-//         }
-//       });
-//   }
+var stock;
+var newStock;
 
 function start() {
-    // query the database for all items being auctioned
-    connection.query("SELECT * FROM products", function(err, results) {
-      if (err) throw err;
-     
-      //results of the sql select statement
-     console.table(results);
-     
-      // once you have the items, prompt the user for which they'd like to bid on
-      inquirer
-        .prompt([
-          {
-            name: "choice",
-            type: "rawlist",
-            choices: function() {
-              var choiceArray = [];
-              for (var i = 0; i < results.length; i++) {
-                choiceArray.push(results[i].item_name);
-              }
-              return choiceArray;
-            },
-            message: "What auction would you like to place a bid in?"
-          },
-          {
-            name: "bid",
-            type: "input",
-            message: "How much would you like to bid?"
-          }
-        ])
-        .then(function(answer) {
-          // get the information of the chosen item
-          var chosenItem;
-          for (var i = 0; i < results.length; i++) {
-            if (results[i].item_name === answer.choice) {
-              chosenItem = results[i];
+// connect to the mysql server and sql database
+connection.query(
+    'SELECT * FROM products', function(err, results) {
+    if (err) throw err;
+            // Console log table from bamazonDB
+            console.table(results);
+            // Define choice array to add products
+            var choiceArr = [];
+            //create choices for each item
+            for (var i = 0; i < results.length; i++){
+                choiceArr.push(results[i].product_name)
             }
-          }
-  
-          // determine if bid was high enough
-          if (chosenItem.highest_bid < parseInt(answer.bid)) {
-            // bid was high enough, so update db, let the user know, and start over
+        //begin asking the questions for input
+        inquirer.prompt([
+            {
+                type: 'list',
+                message: 'Welcome to Bamazon, which item ID would you like to purchase?',
+                name: 'item',
+                choices: choiceArr
+            },
+            {
+                type: 'input',
+                message: 'How many would you like to buy?',
+                name: 'buy'
+
+            }
+    ])
+    .then(function(answer){
+        //compare stock quanity with user choice
+        stock = results[choiceArr.indexOf(answer.item)].stock_quantity;
+        //new stock variable to represent subtraction once purchased
+        newStock = stock - answer.buy;
+        //update tables with new stock
+        if (answer.buy <= stock){
             connection.query(
-              "UPDATE auctions SET ? WHERE ?",
-              [
-                {
-                  highest_bid: answer.bid
-                },
-                {
-                  id: chosenItem.id
+                "UPDATE products SET ? WHERE ?",
+                [
+                    {
+                        stock_quantity: newStock
+                    },
+                    {
+                        product_name: answer.item
+                    }
+                ],
+                function(err){
+                    if(err) throw err;
+
+                    var cost = results[choiceArr.indexOf(answer.item)].price
+                    var totalCost = results[choiceArr.indexOf(answer.item)].stock * cost;
+                    console.log('Thanks for your purchase!');
+                    console.log("Your total is: $" + totalCost);
+                    //prompt the user if they're still shopping
+                    shopping();
                 }
-              ],
-              function(error) {
-                if (error) throw err;
-                console.log("Bid placed successfully!");
-                start();
-              }
             );
-          }
-          else {
-            // bid wasn't high enough, so apologize and start over
-            console.log("Your bid was too low. Try again...");
+        } else if (answer.buy > stock){
+            console.log("Insufficient Stock!");
+            shopping();
+        }
+      });
+    }
+  ); 
+};
+
+start();
+
+function shopping () {
+    inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Still shopping?',
+            name: 'stillshopping',
+            choices: ['yes', 'no']
+        }
+    ]).then(function(answer){
+        if (answer.stillshopping === 'yes'){
             start();
-          }
-        });
-    });
-  }
+        } else {
+            console.log("Thanks for your monies!");
+            connection.end();
+        }
+    })
+}
+
+
+
+
+
+// function start() {
+//     // query the database for all items being auctioned
+//     connection.query("SELECT * FROM products", function(err, results) {
+//       if (err) throw err;
+     
+//       //results of the sql select statement
+//      console.table(results);
+     
+//     //   once you have the items, prompt the user for which they'd like to bid on
+//     inquirer.prompt([{
+//         name: "shop",
+//         type: "input",
+//         message: "Welcome to Bamazon, what item would you like to buy?[Quit with Q]",
+//       }]).then(function(answer) {
+//         var correct = false;
+//         for (var i=0; i<results.length;i++){
+//             if(results[i].product_name===answer.choice){
+//                 correct=true;
+//                 var product = answer.choice;
+//                 var id= i;
+//         }
+//         }
+//       });
+//   })
+// }
+
+//     // function start(results) {
+//     //         inquirer.prompt([{
+//     //             name: "shop",
+//     //             type: "input",
+//     //             message: "Welcome to Bamazon, what item would you like to buy?[Quit with Q]",
+//     //           }]).then(function(answer) {
+//     //             var correct = false;
+//     //             for (var i=0; i<results.length;i++){
+//     //                 if(results[i].product_name===answer.choice){
+//     //                     correct=true;
+//     //                     var product = answer.choice;
+//     //                     var id= i;
+//     //             }
+//     //             }
+//     //           });
+//     //       }
