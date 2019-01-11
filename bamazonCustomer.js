@@ -41,7 +41,6 @@ connection.query(
                 type: 'input',
                 message: 'How many would you like to buy?',
                 name: 'buy'
-
             }
     ])
     .then(function(answer){
@@ -65,8 +64,10 @@ connection.query(
                     if(err) throw err;
 
                     var cost = results[choiceArr.indexOf(answer.item)].price
-                    var totalCost = results[choiceArr.indexOf(answer.item)].stock * cost;
+                    var totalCost = cost * answer.buy;
                     console.log('Thanks for your purchase!');
+                    console.log("This is the cost: " + cost);
+                    console.log("This was the answer: " + answer.buy);
                     console.log("Your total is: $" + totalCost);
                     //prompt the user if they're still shopping
                     shopping();
@@ -104,46 +105,3 @@ function shopping () {
 
 
 
-
-// function start() {
-//     // query the database for all items being auctioned
-//     connection.query("SELECT * FROM products", function(err, results) {
-//       if (err) throw err;
-     
-//       //results of the sql select statement
-//      console.table(results);
-     
-//     //   once you have the items, prompt the user for which they'd like to bid on
-//     inquirer.prompt([{
-//         name: "shop",
-//         type: "input",
-//         message: "Welcome to Bamazon, what item would you like to buy?[Quit with Q]",
-//       }]).then(function(answer) {
-//         var correct = false;
-//         for (var i=0; i<results.length;i++){
-//             if(results[i].product_name===answer.choice){
-//                 correct=true;
-//                 var product = answer.choice;
-//                 var id= i;
-//         }
-//         }
-//       });
-//   })
-// }
-
-//     // function start(results) {
-//     //         inquirer.prompt([{
-//     //             name: "shop",
-//     //             type: "input",
-//     //             message: "Welcome to Bamazon, what item would you like to buy?[Quit with Q]",
-//     //           }]).then(function(answer) {
-//     //             var correct = false;
-//     //             for (var i=0; i<results.length;i++){
-//     //                 if(results[i].product_name===answer.choice){
-//     //                     correct=true;
-//     //                     var product = answer.choice;
-//     //                     var id= i;
-//     //             }
-//     //             }
-//     //           });
-//     //       }
